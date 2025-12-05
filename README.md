@@ -1,23 +1,30 @@
-# NYC Taxi Trip Duration Prediction
+# 🚕 NYC Taxi Trip Duration Prediction
 
-A machine learning project for predicting New York City taxi trip duration using the Kaggle _NYC Taxi Trip Duration_ dataset.  
-This project includes data cleaning, rich feature engineering, multiple regression models (CatBoost, Random Forest, Ridge), and a modern Streamlit web application for making predictions with an interactive NYC map.
+A machine learning project for predicting the duration of New York City taxi trips using the **Kaggle NYC Taxi Trip Duration dataset**.
+This repository includes data preprocessing, powerful ML models (CatBoost & Random Forest), feature engineering, model evaluation, and a simple Streamlit interface for predictions.
 
 ---
 
 ## 🎯 Overview
 
-This project implements a trip duration prediction system that estimates how long a taxi ride in NYC will take, based on pickup time and GPS locations.  
-It combines custom feature engineering with powerful tree-based models to produce accurate, interpretable predictions.
+This project implements a full end-to-end pipeline that predicts how long a taxi trip in NYC will take based on pickup/dropoff coordinates, datetime features, and trip characteristics.
 
-**Key Technologies:**
+It includes:
 
-- Python 3.8+
-- NumPy & Pandas for data handling
-- Scikit-learn for pipelines and metrics
-- CatBoost for gradient boosting
-- Streamlit for the web interface
-- Folium / streamlit-folium for interactive maps
+* Clean data preprocessing
+* Geographic & time-based feature engineering
+* Training multiple regression models
+* Model evaluation & comparison
+* A small UI for real-time predictions
+
+**Key Technologies**
+
+* Python 3.8+
+* NumPy, Pandas
+* Scikit-learn
+* CatBoost
+* Streamlit
+* Matplotlib / Seaborn for analysis
 
 ---
 
@@ -26,156 +33,163 @@ It combines custom feature engineering with powerful tree-based models to produc
 ```text
 .
 ├── data/
-│   ├── train.zip                     # Compressed training set
-│   └── val.zip                       # Compressed validation set
+│   ├── train.csv                     # Local training data (ignored in Git)
+│   └── val.csv                       # Local validation data (ignored in Git)
 │
 ├── models/
-│   ├── catboost_nyc.cbm              # Final CatBoost model
-│   └── ridge.pkl                     # Ridge regression baseline
+│   ├── random_forest.pkl             # Random Forest model
+│   └── catboost_nyc.cbm              # CatBoost model
 │
 ├── notebook/
-│   └── EDA.ipynb                     # Exploratory data analysis & experiments
+│   └── EDA.ipynb                     # Exploratory data analysis notebook
 │
-├── data_load.py                      # Data loading & outlier handling
-├── evaluation.py                     # Evaluation metrics (R2, RMSE, RMSLE)
-├── feature_engineering.py            # All feature engineering utilities
-├── feature_selection.py              # Simple feature importance via Random Forest
-├── pipeline.py                       # End-to-end preprocessing pipeline
-├── train_catboost.py                 # Train CatBoost model
+├── src/
+│   ├── data_load.py                  # Data loading & cleaning utilities
+│   ├── feature_engineering.py        # Custom feature engineering functions
+│   ├── pipeline.py                   # End-to-end preprocessing pipeline
+│   └── evaluation.py                 # Model evaluation utilities
+│
+├── app/
+│   └── streamlit_app.py              # Streamlit prediction UI
+│
 ├── train_random_forest.py            # Train Random Forest model
-├── train_ridge.py                    # Train Ridge regression model
-├── main.py                           # Example script to run training
-└── streamlit_app.py                  # Streamlit web application
+├── main.py                           # Example: run training pipeline
+├── .gitignore
+└── README.md
 ```
 
 ---
 
 ## ✨ Features
 
-- **Data Preprocessing**
+### **🧼 Data Preprocessing**
 
-  - Loads train/validation splits from `data/`
-  - Removes trips with:
+* Removes invalid or extreme values:
 
-    - Non-positive or extremely long durations (> 12 hours)
-    - Coordinates outside a NYC geographic bounding box
-    - Invalid passenger counts (0, 7, etc.)
+  * Negative or unrealistic durations
+  * Out-of-bound GPS coordinates
+  * Invalid passenger counts
+* Handles missing values
+* Converts datetime into rich time features
 
-- **Feature Engineering**
+---
 
-  - Haversine distance (great-circle distance in km)
-  - Manhattan distance and latitude/longitude deltas
-  - Distance ratio (Manhattan / Haversine)
-  - Midpoint latitude & longitude
-  - Bearing (direction from pickup to dropoff)
-  - Time-based features (day, month, weekday, hour)
-  - Working-day and rush-hour flags
-  - Cyclical encodings for time and bearing (sin/cos)
-  - Simple one-hot style features (e.g., vendor ID, month dummies)
+### **🧪 Feature Engineering**
 
-- **Models**
+* **Haversine distance** (great-circle distance)
+* **Manhattan distance**
+* Latitude/longitude differences
+* Time-based features:
 
-  - CatBoostRegressor (main production model)
-  - RandomForestRegressor (baseline)
-  - Ridge Regression (linear baseline)
-  - Metrics: R², RMSE, RMSLE
+  * Hour, weekday, month
+  * Rush-hour flags
+  * Weekend indicator
+* Bearing angle (trip direction)
+* Vendor ID & store-forward flag
+* Cyclic encodings (sin/cos)
 
-- **Interactive Web App**
+---
 
-  - Built with Streamlit
-  - Validates that coordinates lie inside NYC
-  - Quickly fill form using preset example routes
-  - Displays predicted trip duration in minutes
-  - Shows pickup & dropoff on an interactive NYC map (Folium)
+### **🤖 Models**
+
+#### **CatBoostRegressor — Main Model**
+
+* Handles categorical data efficiently
+* High accuracy
+* Low preprocessing requirements
+
+#### **RandomForestRegressor — Baseline**
+
+* Strong performance
+* Good for feature importance insight
+
+#### **Evaluation Metrics**
+
+* **R²**
+* **RMSE**
+* **MAE**
+* Handles skew via log-transformed targets
 
 ---
 
 ## 💻 Usage
 
-### 🔹 Training the Models
-
-Train the main CatBoost model:
-
-```bash
-python train_catboost.py
-```
-
-Train the Random Forest baseline:
+### 🔹 **Train the Random Forest Model**
 
 ```bash
 python train_random_forest.py
 ```
 
-Train the Ridge regression baseline:
+### 🔹 **Train Using the Full Pipeline (main.py)**
 
 ```bash
-python train_ridge.py
+python main.py
 ```
 
-Each script:
+The scripts will:
 
-- Loads and cleans the data using `data_load.py`
-- Applies feature engineering from `feature_engineering.py`
-- Runs the preprocessing pipeline from `pipeline.py`
-- Evaluates performance with `evaluation.py`
-- Saves the trained model into the `models/` directory
+* Load and clean the dataset
+* Apply feature engineering
+* Train Random Forest or CatBoost
+* Evaluate the model
+* Save the trained model under `models/`
 
 ---
 
-### 🔹 Running the Streamlit App
-
-Launch the interactive web application:
+### 🔹 **Launch the Streamlit App**
 
 ```bash
-streamlit run streamlit_app.py
+streamlit run app/streamlit_app.py
 ```
 
 The app provides:
 
-- A form to enter:
-
-  - Vendor ID
-  - Pickup date & time (hour + minute)
-  - Pickup & dropoff latitude/longitude
-
-- Coordinate validation to ensure all points are inside NYC bounds
-- Quick preset example routes for demo
-- Predicted trip duration in **minutes**
-- An interactive map showing pickup and dropoff points
+* Input form for trip details
+* Validation of NYC coordinates
+* Real-time prediction of trip duration
+* Simple interface for quick testing
 
 ---
 
 ## 🔬 Model Details
 
-**Algorithm**
+### **Algorithm**
 
-- Main model: `CatBoostRegressor`
-- Target variable: `log_trip_duration = log1p(trip_duration_seconds)`
-- Loss metric: RMSE / RMSLE
-- Features: all engineered time, distance, and geometry features listed above
+* Main model: `CatBoostRegressor`
+* Loss function: RMSE
+* Target: `trip_duration` (seconds)
 
-**Evaluation**
+### **Evaluation**
 
-`evaluation.py` computes:
+`src/evaluation.py` computes:
 
-- R² (coefficient of determination)
-- RMSE (root mean squared error)
-- RMSLE (root mean squared log error – robust to skewed durations)
+* R²
+* RMSE
+* MAE
 
 ---
 
 ## 📊 Dataset
 
-The project is based on the **NYC Taxi Trip Duration** competition dataset on Kaggle:
+This project uses the official Kaggle dataset:
 
-> [https://www.kaggle.com/c/nyc-taxi-trip-duration](https://www.kaggle.com/c/nyc-taxi-trip-duration)
+👉 **NYC Taxi Trip Duration Dataset**
+[https://www.kaggle.com/competitions/nyc-taxi-trip-duration/data](https://www.kaggle.com/competitions/nyc-taxi-trip-duration/data)
 
-The full CSVs are large, so this repository stores zipped versions (`train.zip`, `val.zip`).
-You can download or regenerate the original CSVs from Kaggle as needed.
+The dataset is **not stored in this repository** due to size.
+Place the downloaded files into:
+
+```
+/data/train.csv
+/data/val.csv
+```
 
 ---
 
-## 👤 Author
+## 👥 Authors
 
 **Mahmoud Ashraf**
+Machine Learning Engineer
+
+**Mohamed Ehab**
 Machine Learning Engineer
