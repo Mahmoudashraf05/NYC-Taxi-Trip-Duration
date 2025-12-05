@@ -1,0 +1,14 @@
+# Ignore big data files
+data/train.csv
+data/val.csv
+
+# Ignore cache and IDE files
+__pycache__/
+.ipynb_checkpoints/
+.idea/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore CatBoost logs
+catboost_info/
