@@ -1,7 +1,7 @@
 # 🚕 NYC Taxi Trip Duration Prediction
 
 A machine learning project for predicting the duration of New York City taxi trips using the **Kaggle NYC Taxi Trip Duration dataset**.
-This repository includes data preprocessing, powerful ML models (CatBoost & Random Forest), feature engineering, model evaluation, and a simple Streamlit interface for predictions.
+This repository includes data preprocessing, powerful ML models (CatBoost & Ridge), feature engineering, model evaluation, and a simple Streamlit interface for predictions.
 
 ---
 
@@ -52,8 +52,6 @@ It includes:
 ├── app/
 │   └── streamlit_app.py              # Streamlit prediction UI
 │
-├── train_random_forest.py            # Train Random Forest model
-├── main.py                           # Example: run training pipeline
 ├── .gitignore
 └── README.md
 ```
@@ -98,10 +96,12 @@ It includes:
 * High accuracy
 * Low preprocessing requirements
 
-#### **RandomForestRegressor — Baseline**
+#### **RandomForestRegressor — Feature Importance**
 
 * Strong performance
 * Good for feature importance insight
+
+#### **RidgeRegressor — Baseline**
 
 #### **Evaluation Metrics**
 
@@ -114,23 +114,17 @@ It includes:
 
 ## 💻 Usage
 
-### 🔹 **Train the Random Forest Model**
+### 🔹 **Train the CatBoost Model**
 
 ```bash
-python train_random_forest.py
-```
-
-### 🔹 **Train Using the Full Pipeline (main.py)**
-
-```bash
-python main.py
+python train_catboost.py
 ```
 
 The scripts will:
 
 * Load and clean the dataset
 * Apply feature engineering
-* Train Random Forest or CatBoost
+* Train CatBoost
 * Evaluate the model
 * Save the trained model under `models/`
 

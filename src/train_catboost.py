@@ -31,3 +31,6 @@ def run_catboost():
 
     model.save_model('models/catboost_nyc.cbm')
     print('Catboost model saved')
+
+if __name__ == '__main__':
+    run_catboost()
