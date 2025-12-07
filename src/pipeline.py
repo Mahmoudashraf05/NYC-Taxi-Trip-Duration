@@ -10,6 +10,7 @@ def encoding(train, validation, use_all_features):
     """
     One-hot encode categoricals + select final feature set including target.
     """
+    # 1) Define categorical columns to be one-hot encoded
     categorical_features = [
         'passenger_count',
         'vendor_id',
@@ -22,29 +23,40 @@ def encoding(train, validation, use_all_features):
         'day_of_week',
     ]
 
+    # 2) Create a OneHotEncoder
     enc = OneHotEncoder(drop='first', handle_unknown='ignore', sparse_output=False)
 
+    # 3) Fit encoder on train and transform train/validation
     cat_train = pd.DataFrame(
         enc.fit_transform(train[categorical_features]),
         columns=enc.get_feature_names_out(categorical_features),
         index=train.index,
     )
-
     cat_val = pd.DataFrame(
         enc.transform(validation[categorical_features]),
         columns=enc.get_feature_names_out(categorical_features),
         index=validation.index,
     )
 
+    # 4) Concatenate original numeric + engineered features
     train_full = pd.concat([train, cat_train], axis=1)
     val_full = pd.concat([validation, cat_val], axis=1)
 
+    # 5) If we want to keep ALL features (for feature selection / experiments),
     if use_all_features:
-        # keep all features for feature selection
-        return train_full, val_full
+        num_features_train = train_full.select_dtypes(include='number').columns
+        train_full_numeric = train_full[num_features_train].copy()
+        train_target = train_full_numeric.pop('log_trip_duration')
+        train_full_numeric.loc[:, 'log_trip_duration'] = train_target  # put target last
 
+        num_features_val = val_full.select_dtypes(include='number').columns
+        val_full_numeric = val_full[num_features_val].copy()
+        val_target = val_full_numeric.pop('log_trip_duration')
+        val_full_numeric.loc[:, 'log_trip_duration'] = val_target  # put target last
 
-    # Cleaned feature set
+        return train_full_numeric, val_full_numeric
+
+    # Cleaned feature set after feature selection
     features = [
         'pickup_longitude',
         'pickup_latitude',
@@ -91,15 +103,18 @@ def preparedata(train, test, processor):
         1 -> StandardScaler
         2 -> MinMaxScaler
     """
+    # 1) Convert to NumPy for faster ML model running
     train = train.to_numpy()
     test = test.to_numpy()
 
+    # 2) Split into features (X) and target (y)
     x_train = train[:, :-1]
     t_train = train[:, -1]
 
     x_test = test[:, :-1]
     t_test = test[:, -1]
 
+    # 3) Optionally apply scaling:
     scaler = None
     if processor == 1:
         scaler = StandardScaler()
@@ -120,23 +135,27 @@ def run_pipeline(processor, use_all_features):
     Returns:
       X_train, y_train, X_val, y_val, feature_names
     """
+    # 1) Load raw training and validation datasets
     train, validation = load_data()
 
     print(f'Training data before processed: {train.shape}')
     print(f'Validation data before processed: {validation.shape}')
 
+    # 2) Handle outliers
     train = Outliers_handling(train)
     validation = Outliers_handling(validation)
 
+    # 3) Apply feature engineering
     train = prepare_data(train)
     validation = prepare_data(validation)
 
+    # 4) Encode categorical variables and build the final feature set
     train_encoded, val_encoded = encoding(train, validation, use_all_features)
+
     feature_names = list(train_encoded.columns[:-1])
 
-    X_train, y_train, X_val, y_val = preparedata(
-        train_encoded, val_encoded, processor=processor
-    )
+    # splitting the data
+    X_train, y_train, X_val, y_val = preparedata(train_encoded, val_encoded, processor=processor)
 
     print(f'Training data after processed: {train_encoded.shape}')
     print(f'Validation data after processed: {val_encoded.shape}')

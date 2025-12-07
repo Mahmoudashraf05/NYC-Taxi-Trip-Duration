@@ -4,8 +4,10 @@ from pipeline import run_pipeline
 from evaluation import evaluate_model
 
 def run_catboost():
+    # Run the preprocessing pipeline
     X_train, y_train, X_val, y_val, feature_names = run_pipeline(processor=0, use_all_features=False)
 
+    # Initialize the CatBoost model
     model = CatBoostRegressor(
         iterations=3000,
         depth=8,
@@ -16,6 +18,7 @@ def run_catboost():
         verbose=200,
     )
 
+    # Train the model
     model.fit(
         X_train,
         y_train,
@@ -23,14 +26,17 @@ def run_catboost():
         use_best_model=True,
     )
 
+    # Predict on validation set
     y_pred = model.predict(X_val)
 
+    # Evaluate the model
     results = evaluate_model(y_val, y_pred, model_name='CatBoost')
-
     print(results)
 
+    # Save the model
     model.save_model('models/catboost_nyc.cbm')
     print('Catboost model saved')
+
 
 if __name__ == '__main__':
     run_catboost()

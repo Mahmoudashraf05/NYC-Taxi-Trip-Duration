@@ -284,7 +284,7 @@ def build_catboost_features(df: pd.DataFrame) -> pd.DataFrame:
 @st.cache_resource
 def load_catboost_model():
     model = CatBoostRegressor()
-    model.load_model("models/catboost_nyc.cbm")
+    model.load_model("../models/catboost_nyc.cbm")
     return model
 
 

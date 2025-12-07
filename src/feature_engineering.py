@@ -3,13 +3,18 @@ import pandas as pd
 
 
 def haversine(p_lat, p_lon, d_lat, d_lon):
-    """Great-circle distance between two coordinates in kilometers"""
+    """
+    Compute great-circle distance (in kilometers) between pickup and dropoff coordinates.
+    Used to measure straight-line (air) distance between two points on Earth.
+    """
+    # Convert coordinates to radians
     R = 6371
     p_lat = np.radians(p_lat)
     p_lon = np.radians(p_lon)
     d_lat = np.radians(d_lat)
     d_lon = np.radians(d_lon)
 
+    # Apply the Haversine formula
     avg_lat_dis = (d_lat - p_lat) / 2
     avg_lon_dis = (d_lon - p_lon) / 2
 
@@ -22,12 +27,17 @@ def haversine(p_lat, p_lon, d_lat, d_lon):
 
 
 def bearing(p_lat, p_lon, d_lat, d_lon):
-    """Bearing (direction) from pickup to dropoff in degrees [0, 360)"""
+    """
+    Compute bearing (direction) from pickup → dropoff in degrees [0, 360).
+    Shows the travel direction (north, east, south, west, etc.).
+    """
+    # Convert coordinates to radians
     p_lat = np.radians(p_lat)
     p_lon = np.radians(p_lon)
     d_lat = np.radians(d_lat)
     d_lon = np.radians(d_lon)
 
+    # Bearing formula: direction angle relative to North
     x = np.sin(d_lon - p_lon) * np.cos(d_lat)
     y = np.cos(p_lat) * np.sin(d_lat) - (
         np.sin(p_lat) * np.cos(d_lat) * np.cos(d_lon - p_lon)
@@ -51,8 +61,8 @@ def prepare_data(df):
     df.drop(columns='id', axis=1, inplace=True)
 
     # Datetime features
-    working = [0, 1, 2, 3, 4]
-    rush = [10, 11, 12, 13, 14, 15, 16, 17]
+    working = [0, 1, 2, 3, 4]                 # Monday–Friday
+    rush = [10, 11, 12, 13, 14, 15, 16, 17]   # Rush hour
 
     df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'])
     df['day'] = df['pickup_datetime'].dt.day
@@ -75,32 +85,18 @@ def prepare_data(df):
         + np.abs(df['pickup_latitude'] - df['dropoff_latitude'])
     )
 
-    df['haversine_distance'] = haversine(
-        df['pickup_latitude'],
-        df['pickup_longitude'],
-        df['dropoff_latitude'],
-        df['dropoff_longitude'],
-    )
+    df['haversine_distance'] = haversine(df['pickup_latitude'], df['pickup_longitude'],
+                                         df['dropoff_latitude'], df['dropoff_longitude'])
 
-    df['distance_ratio'] = df['manhattan_distance'] / (
-        df['haversine_distance'] + 1e-24
-    )
+    df['distance_ratio'] = df['manhattan_distance'] / (df['haversine_distance'] + 0.000000000000000000000000000001)
 
     # Midpoint
-    df['midpoint_latitude'] = (
-        df['pickup_latitude'] + df['dropoff_latitude']
-    ) / 2
-    df['midpoint_longitude'] = (
-        df['pickup_longitude'] + df['dropoff_longitude']
-    ) / 2
+    df['midpoint_latitude'] = (df['pickup_latitude'] + df['dropoff_latitude']) / 2
+    df['midpoint_longitude'] = (df['pickup_longitude'] + df['dropoff_longitude']) / 2
 
     # Bearing
-    df['bearing'] = bearing(
-        df['pickup_latitude'],
-        df['pickup_longitude'],
-        df['dropoff_latitude'],
-        df['dropoff_longitude'],
-    )
+    df['bearing'] = bearing(df['pickup_latitude'], df['pickup_longitude'],
+                            df['dropoff_latitude'], df['dropoff_longitude'])
 
     # Cyclical encodings
     df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -118,5 +114,6 @@ def prepare_data(df):
     # Target
     df['log_trip_duration'] = np.log1p(df['trip_duration'])
 
+    #Dropping unused columns
     df.drop(columns=['pickup_datetime', 'trip_duration'], inplace=True)
     return df

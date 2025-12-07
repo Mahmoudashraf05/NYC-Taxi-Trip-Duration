@@ -1,39 +1,30 @@
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
+from evaluation import evaluate_model
 from pipeline import run_pipeline
-from data_load import load_data, Outliers_handling
-from feature_engineering import prepare_data
-from pipeline import encoding
 
 def run_feature_selection():
-    """
-    Very simple feature selection using RandomForest importance.
-    Returns list of top_n feature names.
-    """
-    # 1) Load & clean
-    train, _ = load_data()  # we only need training data for feature importance
-    train = Outliers_handling(train)
+    # Run the preprocessing pipeline
+    X_train, y_train, X_val, y_val, feature_names  = run_pipeline(processor=0, use_all_features=True)
 
-    # 2) Feature engineering (haversine, bearing, datetime, etc.)
-    train = prepare_data(train)
-
-    # 3) One-hot encode and keep numerical features
-    train_full, _ = encoding(train, train, use_all_features=True)
-    train_full = train_full.select_dtypes(include=['number']).copy()
-
-    # 4) Split X / y (log_trip_duration is the target)
-    feature_cols = [c for c in train_full.columns if c != 'log_trip_duration']
-    X_train = train_full[feature_cols]
-    y_train = train_full['log_trip_duration']
-
-
+    # Initialize and train the Random Forest model
     model = RandomForestRegressor(
         n_estimators=80, max_depth=20, random_state=42, n_jobs=-1
     )
     model.fit(X_train, y_train)
 
-    fi = pd.DataFrame(
-        {'Feature': X_train.columns, 'Importance': model.feature_importances_}
-    ).sort_values('Importance', ascending=False)
+    # Predict on validation set
+    y_pred = model.predict(X_val)
 
+    # Evaluate the model
+    results = evaluate_model(y_val, y_pred, model_name='Random Forest (Feature Selection)')
+    print(results)
+
+    # Feature importance
+    fi = pd.DataFrame(
+        {'Feature': feature_names, 'Importance': model.feature_importances_}
+    ).sort_values('Importance', ascending=False)
     print(fi.head(30))
+
+if __name__ == '__main__':
+    run_feature_selection()
